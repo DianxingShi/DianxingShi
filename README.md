@@ -1,4 +1,4 @@
-  ## Hi there 👋     A rookie major in CV🔭  and  Ai4S🌱
+  ## Hi there 👋     for CV & Ai4S
 ![](profile-3d-contrib/profile-south-season-animate.svg)
 <!--
 **IcodeMYlove/IcodeMYlove** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
