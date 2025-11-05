@@ -1,4 +1,4 @@
-  ## Hi there 👋 & I am seeking for PhD opportunities of 26Fall 🇺🇸 🇯🇵 🇨🇳
+  ## Hi there 👋        & *CV, VLM, MLLM, Agent*
    
 ![](profile-3d-contrib/profile-south-season-animate.svg)
 <!--
