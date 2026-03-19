@@ -61,44 +61,29 @@ def main():
     today_utc = datetime.now(timezone.utc).date()
     yesterday_utc = today_utc - timedelta(days=1)
 
-    rows = []
+    total_24h = 0
+    total_14d = 0
+
     for r in repos:
         owner = r["owner"]["login"]
         name = r["name"]
-
         clones = get_clones(owner, name)
-        # clones entries are daily buckets for recent ~14 days
-        count_14d = sum(item.get("count", 0) for item in clones)
 
-        count_24h = 0
+        total_14d += sum(item.get("count", 0) for item in clones)
         for item in clones:
-            d = item.get("timestamp", "")[:10]  # YYYY-MM-DD
+            d = item.get("timestamp", "")[:10]
             if d == yesterday_utc.isoformat():
-                count_24h = item.get("count", 0)
+                total_24h += item.get("count", 0)
                 break
-
-        rows.append((name, count_24h, count_14d))
-
-    rows.sort(key=lambda x: (x[1], x[2], x[0].lower()), reverse=True)
-
-    total_24h = sum(x[1] for x in rows)
-    total_14d = sum(x[2] for x in rows)
 
     lines = []
     lines.append("## Public Repository Clone Summary")
     lines.append("")
     lines.append(f"_Last updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}_")
     lines.append("")
-    lines.append(f"**All repos total** → New Clones (24h): **{total_24h}** | Total New Clones (14d): **{total_14d}**")
-    lines.append("")
-    lines.append("| Repository | New Clones (24h) | Total New Clones (14d) |")
-    lines.append("|---|---:|---:|")
-
-    if not rows:
-        lines.append("| - | 0 | 0 |")
-    else:
-        for repo, c24, c14 in rows:
-            lines.append(f"| `{repo}` | {c24} | {c14} |")
+    lines.append("| New Clones (24h) | Total New Clones (14d) |")
+    lines.append("|---:|---:|")
+    lines.append(f"| {total_24h} | {total_14d} |")
 
     section = "\n".join(lines)
 
