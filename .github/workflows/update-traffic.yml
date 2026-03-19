@@ -32,7 +32,7 @@ jobs:
 
       - name: Debug traffic API (single repo)
         run: |
-          REPO_NAME="your-repo-name"
+          REPO_NAME="LG-CLIP"
           echo "Checking clones endpoint for DianxingShi/${REPO_NAME} ..."
           curl -i \
             -H "Authorization: Bearer ${GH_TOKEN}" \
