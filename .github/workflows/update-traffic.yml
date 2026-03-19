@@ -1,3 +1,11 @@
+name: Update Public Repo Traffic
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: "20 1 * * *"
+  workflow_dispatch:
 import os
 import requests
 from datetime import datetime, timezone
