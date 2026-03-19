@@ -1,7 +1,6 @@
 import os
 import requests
-from datetime import datetime, timezone
-from collections import defaultdict
+from datetime import datetime, timezone, timedelta
 
 GH_TOKEN = os.environ.get("GH_TOKEN", "")
 GH_USER = os.environ.get("GH_USER", "")
@@ -16,111 +15,33 @@ HEADERS = {
 START = "<!--TRAFFIC_START-->"
 END = "<!--TRAFFIC_END-->"
 
-def gh_get(url, params=None):
-    r = requests.get(url, headers=HEADERS, params=params, timeout=30)
-    if r.status_code >= 400:
-        raise RuntimeError(f"GitHub API error {r.status_code} for {url}: {r.text}")
-    return r.json(), r.links
+def safe_get(url, params=None):
+    return requests.get(url, headers=HEADERS, params=params, timeout=30)
 
 def get_public_repos(user):
     repos = []
     page = 1
     while True:
-        data, links = gh_get(
+        r = safe_get(
             f"https://api.github.com/users/{user}/repos",
             params={"per_page": 100, "page": page, "type": "public", "sort": "updated"},
         )
+        if r.status_code >= 400:
+            raise RuntimeError(f"List repos failed: {r.status_code} {r.text[:300]}")
+        data = r.json()
         repos.extend(data)
-        if "next" not in links:
+        if "next" not in r.links:
             break
         page += 1
-    return repos
-
-def get_views(owner, repo):
-    url = f"https://api.github.com/repos/{owner}/{repo}/traffic/views"
-    r = requests.get(url, headers=HEADERS, timeout=30)
-    if r.status_code in (403, 404):
-        print(f"[WARN] views unavailable for {owner}/{repo}: {r.status_code}")
-        return []
-    r.raise_for_status()
-    return r.json().get("views", [])
+    return [x for x in repos if not x.get("fork", False)]
 
 def get_clones(owner, repo):
-    url = f"https://api.github.com/repos/{owner}/{repo}/traffic/clones"
-    r = requests.get(url, headers=HEADERS, timeout=30)
+    r = safe_get(f"https://api.github.com/repos/{owner}/{repo}/traffic/clones")
     if r.status_code in (403, 404):
-        print(f"[WARN] clones unavailable for {owner}/{repo}: {r.status_code}")
         return []
-    r.raise_for_status()
+    if r.status_code >= 400:
+        return []
     return r.json().get("clones", [])
-
-def date_only(ts):
-    return ts[:10]
-
-def build_section(user):
-    repos = get_public_repos(user)
-    repos = [r for r in repos if not r.get("fork", False)]
-    print(f"[INFO] public non-fork repos: {len(repos)}")
-
-    per_repo_daily = {}
-    all_repo_clone_sum_daily = defaultdict(int)
-
-    for r in repos:
-        name = r["name"]
-        owner = r["owner"]["login"]
-        print(f"[INFO] processing {owner}/{name}")
-
-        views = get_views(owner, name)
-        clones = get_clones(owner, name)
-
-        v_map = {date_only(x["timestamp"]): x.get("uniques", 0) for x in views}
-        c_map = {date_only(x["timestamp"]): x.get("count", 0) for x in clones}
-
-        dates = sorted(set(v_map.keys()) | set(c_map.keys()))
-        repo_daily = {}
-        for d in dates:
-            u = v_map.get(d, 0)
-            c = c_map.get(d, 0)
-            repo_daily[d] = {"uniques": u, "clone_count": c}
-            all_repo_clone_sum_daily[d] += c
-
-        per_repo_daily[name] = repo_daily
-
-    all_dates = sorted(all_repo_clone_sum_daily.keys())
-    recent_dates = all_dates[-14:]
-
-    lines = []
-    lines.append("## 📈 Public Repositories Traffic (Last 14 Days)")
-    lines.append("")
-    lines.append(f"_Last updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}_")
-    lines.append("")
-    lines.append("### 每日新增总 Clone（所有公开仓库汇总）")
-    lines.append("")
-    lines.append("| 日期 | 新增 Clone 总数 |")
-    lines.append("|---|---:|")
-    for d in recent_dates:
-        lines.append(f"| {d} | {all_repo_clone_sum_daily[d]} |")
-    if not recent_dates:
-        lines.append("| - | 0 |")
-    lines.append("")
-
-    lines.append("### 每个仓库每天独特访问者 / 总Clone")
-    lines.append("")
-    for repo in sorted(per_repo_daily.keys()):
-        lines.append(f"#### `{repo}`")
-        lines.append("")
-        lines.append("| 日期 | 独特访问者 | Clone 数 |")
-        lines.append("|---|---:|---:|")
-        daily = per_repo_daily[repo]
-        repo_dates = [d for d in recent_dates if d in daily]
-        if not repo_dates:
-            lines.append("| - | 0 | 0 |")
-        else:
-            for d in repo_dates:
-                lines.append(f"| {d} | {daily[d]['uniques']} | {daily[d]['clone_count']} |")
-        lines.append("")
-
-    return "\n".join(lines)
 
 def replace_section(readme, new_section):
     if START in readme and END in readme:
@@ -135,19 +56,60 @@ def main():
     if not GH_USER:
         raise RuntimeError("GH_USER is empty.")
 
-    section = build_section(GH_USER)
+    repos = get_public_repos(GH_USER)
 
+    today_utc = datetime.now(timezone.utc).date()
+    yesterday_utc = today_utc - timedelta(days=1)
+
+    rows = []
+    for r in repos:
+        owner = r["owner"]["login"]
+        name = r["name"]
+
+        clones = get_clones(owner, name)
+        # clones entries are daily buckets for recent ~14 days
+        count_14d = sum(item.get("count", 0) for item in clones)
+
+        count_24h = 0
+        for item in clones:
+            d = item.get("timestamp", "")[:10]  # YYYY-MM-DD
+            if d == yesterday_utc.isoformat():
+                count_24h = item.get("count", 0)
+                break
+
+        rows.append((name, count_24h, count_14d))
+
+    rows.sort(key=lambda x: (x[1], x[2], x[0].lower()), reverse=True)
+
+    total_24h = sum(x[1] for x in rows)
+    total_14d = sum(x[2] for x in rows)
+
+    lines = []
+    lines.append("## Public Repository Clone Summary")
+    lines.append("")
+    lines.append(f"_Last updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}_")
+    lines.append("")
+    lines.append(f"**All repos total** → New Clones (24h): **{total_24h}** | Total New Clones (14d): **{total_14d}**")
+    lines.append("")
+    lines.append("| Repository | New Clones (24h) | Total New Clones (14d) |")
+    lines.append("|---|---:|---:|")
+
+    if not rows:
+        lines.append("| - | 0 | 0 |")
+    else:
+        for repo, c24, c14 in rows:
+            lines.append(f"| `{repo}` | {c24} | {c14} |")
+
+    section = "\n".join(lines)
+
+    old = "# Profile\n"
     if os.path.exists(README_PATH):
         with open(README_PATH, "r", encoding="utf-8") as f:
             old = f.read()
-    else:
-        old = "# Profile\n"
 
     new = replace_section(old, section)
     with open(README_PATH, "w", encoding="utf-8") as f:
         f.write(new)
-
-    print(f"[INFO] README updated: {README_PATH}")
 
 if __name__ == "__main__":
     main()
