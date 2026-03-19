@@ -3,8 +3,8 @@ import requests
 from datetime import datetime, timezone
 from collections import defaultdict
 
-GH_TOKEN = os.environ["GH_TOKEN"]
-GH_USER = os.environ["GH_USER"]
+GH_TOKEN = os.environ.get("GH_TOKEN", "")
+GH_USER = os.environ.get("GH_USER", "")
 README_PATH = os.environ.get("README_PATH", "README.md")
 
 HEADERS = {
@@ -27,7 +27,7 @@ def get_public_repos(user):
     page = 1
     while True:
         data, links = gh_get(
-            "https://api.github.com/users/{user}/repos".format(user=user),
+            f"https://api.github.com/users/{user}/repos",
             params={"per_page": 100, "page": page, "type": "public", "sort": "updated"},
         )
         repos.extend(data)
@@ -40,6 +40,7 @@ def get_views(owner, repo):
     url = f"https://api.github.com/repos/{owner}/{repo}/traffic/views"
     r = requests.get(url, headers=HEADERS, timeout=30)
     if r.status_code in (403, 404):
+        print(f"[WARN] views unavailable for {owner}/{repo}: {r.status_code}")
         return []
     r.raise_for_status()
     return r.json().get("views", [])
@@ -48,24 +49,26 @@ def get_clones(owner, repo):
     url = f"https://api.github.com/repos/{owner}/{repo}/traffic/clones"
     r = requests.get(url, headers=HEADERS, timeout=30)
     if r.status_code in (403, 404):
+        print(f"[WARN] clones unavailable for {owner}/{repo}: {r.status_code}")
         return []
     r.raise_for_status()
     return r.json().get("clones", [])
 
 def date_only(ts):
-    # 2026-03-19T00:00:00Z -> 2026-03-19
     return ts[:10]
 
 def build_section(user):
     repos = get_public_repos(user)
-    repos = [r for r in repos if not r.get("fork", False)]  # 可选：排除 fork
+    repos = [r for r in repos if not r.get("fork", False)]
+    print(f"[INFO] public non-fork repos: {len(repos)}")
 
-    per_repo_daily = {}  # repo -> date -> {uniques, clone_count}
+    per_repo_daily = {}
     all_repo_clone_sum_daily = defaultdict(int)
 
     for r in repos:
         name = r["name"]
         owner = r["owner"]["login"]
+        print(f"[INFO] processing {owner}/{name}")
 
         views = get_views(owner, name)
         clones = get_clones(owner, name)
@@ -83,7 +86,6 @@ def build_section(user):
 
         per_repo_daily[name] = repo_daily
 
-    # 只展示最近14天（traffic API天然也是14天窗口）
     all_dates = sorted(all_repo_clone_sum_daily.keys())
     recent_dates = all_dates[-14:]
 
@@ -92,17 +94,16 @@ def build_section(user):
     lines.append("")
     lines.append(f"_Last updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}_")
     lines.append("")
-
-    # 总表：每日新增总 clone
     lines.append("### 每日新增总 Clone（所有公开仓库汇总）")
     lines.append("")
     lines.append("| 日期 | 新增 Clone 总数 |")
     lines.append("|---|---:|")
     for d in recent_dates:
         lines.append(f"| {d} | {all_repo_clone_sum_daily[d]} |")
+    if not recent_dates:
+        lines.append("| - | 0 |")
     lines.append("")
 
-    # 分仓库表
     lines.append("### 每个仓库每天独特访问者 / 总Clone")
     lines.append("")
     for repo in sorted(per_repo_daily.keys()):
@@ -126,11 +127,14 @@ def replace_section(readme, new_section):
         a = readme.index(START) + len(START)
         b = readme.index(END)
         return readme[:a] + "\n\n" + new_section + "\n\n" + readme[b:]
-    else:
-        # 若不存在标记块则追加
-        return readme + f"\n\n{START}\n\n{new_section}\n\n{END}\n"
+    return readme + f"\n\n{START}\n\n{new_section}\n\n{END}\n"
 
 def main():
+    if not GH_TOKEN:
+        raise RuntimeError("GH_TOKEN is empty. Please set secret TRAFFIC_TOKEN.")
+    if not GH_USER:
+        raise RuntimeError("GH_USER is empty.")
+
     section = build_section(GH_USER)
 
     if os.path.exists(README_PATH):
@@ -140,9 +144,10 @@ def main():
         old = "# Profile\n"
 
     new = replace_section(old, section)
-
     with open(README_PATH, "w", encoding="utf-8") as f:
         f.write(new)
+
+    print(f"[INFO] README updated: {README_PATH}")
 
 if __name__ == "__main__":
     main()
