@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      GH_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
+      GH_USER: DianxingShi
+      README_PATH: README.md
     steps:
       - name: Checkout profile repo
         uses: actions/checkout@v4
@@ -28,20 +31,16 @@ jobs:
         run: pip install requests
 
       - name: Run traffic collector
-        env:
-          GH_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
-          GH_USER: DianxingShi
-          README_PATH: README.md
         run: |
           python -V
           python scripts/update_traffic.py
 
-      - name: Commit and push safely
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           git add README.md
+
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0
@@ -49,16 +48,11 @@ jobs:
 
           git commit -m "chore: update public repo traffic stats"
 
-          # Avoid rebase conflicts on README by replaying commit on latest remote
           git fetch origin main
-          git reset --hard origin/main
-          python scripts/update_traffic.py
-          git add README.md
-
-          if git diff --cached --quiet; then
-            echo "No changes after sync."
+          git pull --rebase origin main || {
+            echo "Rebase failed, aborting and skipping this run."
+            git rebase --abort || true
             exit 0
-          fi
+          }
 
-          git commit -m "chore: update public repo traffic stats"
           git push origin HEAD:main
