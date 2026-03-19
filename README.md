@@ -1,6 +1,61 @@
   ## Hi there 👋        & *CV, VLM, MLLM, Agent*
    <!--TRAFFIC_START-->
-这里会被 GitHub Action 自动替换
+
+## 📈 Public Repositories Traffic (Last 14 Days)
+
+_Last updated (UTC): 2026-03-19 15:05:36_
+
+### 每日新增总 Clone（所有公开仓库汇总）
+
+| 日期 | 新增 Clone 总数 |
+|---|---:|
+| - | 0 |
+
+### 每个仓库每天独特访问者 / 总Clone
+
+#### `DianxingShi`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+#### `DianxingShi.github.io`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+#### `HumanML3D-dataset`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+#### `LG-CLIP`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+#### `LLM-Hiring-Evaluations`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+#### `Latex-Table-Miner`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+#### `sctoken`
+
+| 日期 | 独特访问者 | Clone 数 |
+|---|---:|---:|
+| - | 0 | 0 |
+
+
 <!--TRAFFIC_END-->
 ![](profile-3d-contrib/profile-south-season-animate.svg)
 <!--
