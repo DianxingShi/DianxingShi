@@ -32,9 +32,7 @@ jobs:
 
       - name: Debug traffic API (single repo)
         run: |
-          # 改成你确定有流量的公开仓库名
-          REPO_NAME="LG-CLIP"
-
+          REPO_NAME="your-repo-name"
           echo "Checking clones endpoint for DianxingShi/${REPO_NAME} ..."
           curl -i \
             -H "Authorization: Bearer ${GH_TOKEN}" \
@@ -49,8 +47,23 @@ jobs:
 
       - name: Commit and push
         run: |
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
 
-          if git diff --cached --quiet; then*
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+
+          git commit -m "chore: update public repo traffic stats"
+
+          git fetch origin main
+          if ! git pull --rebase origin main; then
+            echo "Rebase failed, aborting and skipping this run."
+            git rebase --abort || true
+            exit 0
+          fi
+
+          git push origin HEAD:main
