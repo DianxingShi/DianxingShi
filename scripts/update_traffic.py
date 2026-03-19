@@ -43,6 +43,14 @@ def get_clones(owner, repo):
         return []
     return r.json().get("clones", [])
 
+def get_views(owner, repo):
+    r = safe_get(f"https://api.github.com/repos/{owner}/{repo}/traffic/views")
+    if r.status_code in (403, 404):
+        return []
+    if r.status_code >= 400:
+        return []
+    return r.json().get("views", [])
+
 def replace_section(readme, new_section):
     if START in readme and END in readme:
         a = readme.index(START) + len(START)
@@ -61,29 +69,41 @@ def main():
     today_utc = datetime.now(timezone.utc).date()
     yesterday_utc = today_utc - timedelta(days=1)
 
-    total_24h = 0
-    total_14d = 0
+    total_clones_24h = 0
+    total_clones_14d = 0
+    total_unique_24h = 0
+    total_unique_14d = 0
 
     for r in repos:
         owner = r["owner"]["login"]
         name = r["name"]
-        clones = get_clones(owner, name)
 
-        total_14d += sum(item.get("count", 0) for item in clones)
+        clones = get_clones(owner, name)
+        views = get_views(owner, name)
+
+        total_clones_14d += sum(item.get("count", 0) for item in clones)
+        total_unique_14d += sum(item.get("uniques", 0) for item in views)
+
         for item in clones:
             d = item.get("timestamp", "")[:10]
             if d == yesterday_utc.isoformat():
-                total_24h += item.get("count", 0)
+                total_clones_24h += item.get("count", 0)
+                break
+
+        for item in views:
+            d = item.get("timestamp", "")[:10]
+            if d == yesterday_utc.isoformat():
+                total_unique_24h += item.get("uniques", 0)
                 break
 
     lines = []
-    lines.append("## Public Repository Clone Summary")
+    lines.append("## Public Repository Traffic Summary")
     lines.append("")
     lines.append(f"_Last updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}_")
     lines.append("")
-    lines.append("| New Clones (24h) | Total New Clones (14d) |")
-    lines.append("|---:|---:|")
-    lines.append(f"| {total_24h} | {total_14d} |")
+    lines.append("| New Clones (24h) | Total New Clones (14d) | Unique Visitors (24h) | Total Unique Visitors (14d) |")
+    lines.append("|---:|---:|---:|---:|")
+    lines.append(f"| {total_clones_24h} | {total_clones_14d} | {total_unique_24h} | {total_unique_14d} |")
 
     section = "\n".join(lines)
 
