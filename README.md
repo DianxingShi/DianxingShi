@@ -1,60 +1,21 @@
   ## Hi there 👋        & *CV, VLM, MLLM, Agent*
    <!--TRAFFIC_START-->
 
-## 📈 Public Repositories Traffic (Last 14 Days)
+## Public Repository Clone Summary
 
-_Last updated (UTC): 2026-03-19 15:05:36_
+_Last updated (UTC): 2026-03-19 15:07:33_
 
-### 每日新增总 Clone（所有公开仓库汇总）
+**All repos total** → New Clones (24h): **0** | Total New Clones (14d): **0**
 
-| 日期 | 新增 Clone 总数 |
-|---|---:|
-| - | 0 |
-
-### 每个仓库每天独特访问者 / 总Clone
-
-#### `DianxingShi`
-
-| 日期 | 独特访问者 | Clone 数 |
+| Repository | New Clones (24h) | Total New Clones (14d) |
 |---|---:|---:|
-| - | 0 | 0 |
-
-#### `DianxingShi.github.io`
-
-| 日期 | 独特访问者 | Clone 数 |
-|---|---:|---:|
-| - | 0 | 0 |
-
-#### `HumanML3D-dataset`
-
-| 日期 | 独特访问者 | Clone 数 |
-|---|---:|---:|
-| - | 0 | 0 |
-
-#### `LG-CLIP`
-
-| 日期 | 独特访问者 | Clone 数 |
-|---|---:|---:|
-| - | 0 | 0 |
-
-#### `LLM-Hiring-Evaluations`
-
-| 日期 | 独特访问者 | Clone 数 |
-|---|---:|---:|
-| - | 0 | 0 |
-
-#### `Latex-Table-Miner`
-
-| 日期 | 独特访问者 | Clone 数 |
-|---|---:|---:|
-| - | 0 | 0 |
-
-#### `sctoken`
-
-| 日期 | 独特访问者 | Clone 数 |
-|---|---:|---:|
-| - | 0 | 0 |
-
+| `sctoken` | 0 | 0 |
+| `LLM-Hiring-Evaluations` | 0 | 0 |
+| `LG-CLIP` | 0 | 0 |
+| `Latex-Table-Miner` | 0 | 0 |
+| `HumanML3D-dataset` | 0 | 0 |
+| `DianxingShi.github.io` | 0 | 0 |
+| `DianxingShi` | 0 | 0 |
 
 <!--TRAFFIC_END-->
 ![](profile-3d-contrib/profile-south-season-animate.svg)
