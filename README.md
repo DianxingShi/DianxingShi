@@ -1,5 +1,7 @@
   ## Hi there 👋        & *CV, VLM, MLLM, Agent*
-   
+   <!--TRAFFIC_START-->
+这里会被 GitHub Action 自动替换
+<!--TRAFFIC_END-->
 ![](profile-3d-contrib/profile-south-season-animate.svg)
 <!--
 **IcodeMYlove/IcodeMYlove** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
