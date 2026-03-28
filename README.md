@@ -1,4 +1,4 @@
-  ## Hi there 👋        & *CV, VLM, MLLM, Agent*
+  ## Hi there 👋        & *CV, LLM, Agent*
    <!--TRAFFIC_START-->
 
 ## Public Repository Traffic Summary
