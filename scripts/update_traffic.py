@@ -101,9 +101,9 @@ def main():
     lines.append("")
     lines.append(f"_Last updated (UTC): {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}_")
     lines.append("")
-    lines.append("| Total New Clones (14d) | Unique Visitors (24h) | Total Unique Visitors (14d) |")
-    lines.append("|---:|---:|---:|")
-    lines.append(f"| {total_clones_14d} | {total_unique_24h} | {total_unique_14d} |")
+    lines.append("| Total New Clones (14d) | Total Unique Visitors (14d) |")
+    lines.append("|---:|---:|")
+    lines.append(f"| {total_clones_14d} | {total_unique_14d} |")
 
     section = "\n".join(lines)
 
