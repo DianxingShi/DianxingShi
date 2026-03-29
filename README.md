@@ -14,3 +14,16 @@ Here are some ideas to get you started:
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
 -->
+
+
+<!--TRAFFIC_START-->
+
+## Public Repository Traffic Summary
+
+_Last updated (UTC): 2026-03-29 04:11:11_
+
+| Total New Clones (14d) | Total Unique Visitors (14d) |
+|---:|---:|
+| 314 | 10 |
+
+<!--TRAFFIC_END-->
